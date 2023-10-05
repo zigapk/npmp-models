@@ -27,19 +27,15 @@ params_ff = (alpha1, alpha2, alpha3, alpha4, delta1, delta2, Kd, n)
 
 # three-bit counter with external clock
 # a1, not_a1, q1, not_q1, a2, not_a2, q2, not_q2, a3, not_a3, q3, not_q3
-Y0 = np.array([0]*12)
-T = np.linspace(0, t_end, N)
+Y0 = np.array([0]*12) # initial state
+T = np.linspace(0, t_end, N) # vector of timesteps
 
+# numerical interation
 Y = odeint(three_bit_model, Y0, T, args=(params_ff,))
 
 Y_reshaped = np.split(Y, Y.shape[1], 1)
-"""
-Q = Y_reshaped[2::4]
 
-for q in Q:
-    plt.plot(T, q)
-plt.show()
-"""
+# plotting the results
 Q1 = Y_reshaped[2]
 not_Q1 = Y_reshaped[3]
 Q2 = Y_reshaped[6]

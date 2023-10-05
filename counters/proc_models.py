@@ -111,6 +111,13 @@ def four_bit_model(Y, T, params):
 
 
 """
+###
+END OF RELEVANT CODE FOR NPMP
+###
+"""
+
+
+"""
 JOHSON COUNTER MODELS THAT USE FLIP-FLOPS WITH ASYNCRHONOUS SET/RESET
 dodano 23. 1. 2020
 """

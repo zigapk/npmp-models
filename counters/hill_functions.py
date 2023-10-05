@@ -1,8 +1,12 @@
 import numpy as np
 
+
+# 1 input inhibition --> NOT gate
 def repress_1(R, Kd, n):
     return 1/(1 + pow(R/Kd, n))
 
+
+# 2 input inhibition --> NOR gate
 def repress_2(R1, R2, Kd1, n1, Kd2=0, n2=0, comp = 0):
 
     if not Kd2:
@@ -16,9 +20,12 @@ def repress_2(R1, R2, Kd1, n1, Kd2=0, n2=0, comp = 0):
         return 1/(1 + pow(R1/Kd1, n1) + pow(R2/Kd2, n2) + pow(R1/Kd1, n1) * pow(R2/Kd2, n2))
 
 
+# 1 input activation: YES gate
 def activate_1(A, Kd, n):
     return pow(A/Kd, n)/(1 + pow(A/Kd, n))
 
+
+# 2 input activation: AND gate
 def activate_2(A1, A2, Kd1, n1, Kd2=0, n2=0):
 
     if not Kd2:
@@ -27,15 +34,17 @@ def activate_2(A1, A2, Kd1, n1, Kd2=0, n2=0):
         n2 = n1
      
     return pow(A1/Kd1, n1) * pow(A2/Kd2, n2)/(1 + pow(A1/Kd1, n1) + pow(A2/Kd2, n2) + pow(A1/Kd1, n1) * pow(A2/Kd2, n2))
-  
+
+# 3 input activation: AND gate
 def activate_3(A1, A2, A3, Kd, n):
     return activate_1(A1, Kd, n) * activate_1(A2, Kd, n) * activate_1(A3, Kd, n)
 
-
+# activation + inhibition
 def hybrid(A, R, Kd_A, n_A, Kd_R, n_R):
     return activate_1(A, Kd_A, n_A) * repress_1(R, Kd_R, n_R)
     
   
+#  activation + activation + inhibition
 def hybrid_AAR(A1, A2, A3, Kd_A, n_A, Kd_R=0, n_R=0):
     if not Kd_R:
         Kd_R = Kd_A
