@@ -1,8 +1,6 @@
 import numpy as np
 import os
 
-print(os.getcwd())
-
 from hill_functions import *   
 #from hill_functions import *   
  

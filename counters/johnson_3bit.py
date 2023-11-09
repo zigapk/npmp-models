@@ -1,4 +1,4 @@
-from proc_models import *
+from models import *
 from scipy.integrate import odeint
 import matplotlib.pyplot as plt
     
