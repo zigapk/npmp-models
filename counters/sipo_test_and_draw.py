@@ -40,20 +40,42 @@ n = 4.35  # hill
 deltaE = delta1
 KM = 1.0
 
-
-def main():
+def clock_driven_sipo(T):
     params_ff = (alpha1, alpha2, alpha3, alpha4, delta1, delta2, Kd, n, deltaE, KM)
 
     # three-bit counter with external clock
     # a1, not_a1, q1, not_q1, a2, not_a2, q2, not_q2, a3, not_a3, q3, not_q3
-    Y0 = np.array([0] * 18)  # initial state
-    T = np.linspace(0, t_end, N)  # vector of timesteps
+    Y0 = np.array([0] * 18)  # initial state    
 
     # numerical interation
     Y = odeint(three_bit_sipo, Y0, T, args=(params_ff, calc_input, calc_clear))
+    return Y
+    
 
+
+def input_from_different_module_sipo(T):
+    params_ff = (alpha1, alpha2, alpha3, alpha4, delta1, delta2, Kd, n, deltaE, KM)
+    # three-bit counter with external clock
+    # a1, not_a1, q1, not_q1, a2, not_a2, q2, not_q2, a3, not_a3, q3, not_q3        
+    Y = np.zeros((N, 18))        
+    for idx in range(1,N):        
+        Y0 = Y[idx-1,:]    
+        t = T[idx-1:idx+1]       
+        x = calc_input(t[0])
+        Y[idx,:] = odeint(three_bit_sipo, Y0, t, args=(params_ff, calc_input, calc_clear, x))[1,:]
+        
+    return Y
+
+def main():    
+    # three-bit counter with external clock
+    # a1, not_a1, q1, not_q1, a2, not_a2, q2, not_q2, a3, not_a3, q3, not_q3
+    #Y0 = np.array([0] * 18)  # initial state
+    T = np.linspace(0, t_end, N)  # vector of timesteps
+    Y = input_from_different_module_sipo(T)                
+    #Y = clock_driven_sipo(T)                
     Y_reshaped = np.split(Y, Y.shape[1], 1)
-
+    
+    
     # plotting the results
     Q1 = Y_reshaped[2] + 1
     not_Q1 = Y_reshaped[3]
@@ -77,7 +99,8 @@ def main():
 
     plt.legend()
     plt.show()
-
+    
+    
 
 if __name__ == "__main__":
     main()
