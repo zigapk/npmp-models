@@ -6,8 +6,7 @@ from hill_functions import *
 
 from models import ff_ode_model_RS
 
-
-def three_bit_sipo(Y, T, params, calc_input, calc_clear):
+def three_bit_sipo(Y, T, params, calc_input, calc_clear, x=None):
     (
         a1,
         not_a1,
@@ -28,10 +27,14 @@ def three_bit_sipo(Y, T, params, calc_input, calc_clear):
         R3,
         S3,
     ) = Y
-
+                
     clk = get_clock(T)
-
-    d1 = calc_input(T)
+    
+    if x is None:
+        d1 = calc_input(T)
+    else:
+        d1 = x
+                    
     d2 = q1
     d3 = q2
 
