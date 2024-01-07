@@ -6,6 +6,33 @@ from sipo_model import three_bit_sipo
 from params import param_ranges
 from scipy.integrate import odeint
 from sipo_test_and_draw import calc_input, calc_clear, t_end, N, n, KM
+from tqdm import tqdm
+from scipy.signal import find_peaks
+
+
+def calculate_avg_frequency(data):
+    # Find the indices of the peaks in the data
+    peaks, _ = find_peaks(data)
+
+    if len(peaks) == 0:
+        return None
+
+    freq = 1 / (t_end / len(peaks))
+
+    return freq
+
+
+def calculate_avg_diff(data):
+    peaks, _ = find_peaks(data)
+    lows, _ = find_peaks(-data)
+
+    peak_values = data[peaks]
+    low_values = data[lows]
+
+    if len(peaks) == 0 or len(lows) == 0:
+        return None
+
+    return (np.mean(peak_values) - np.mean(low_values)) / 200
 
 
 # Define the objective function
@@ -27,17 +54,28 @@ def evaluate(individual):
     Q2 = Y_reshaped[6]
     Q3 = Y_reshaped[10]
 
-    # Calculate the objective: maximizing the range (max - min)
-    range_Q1 = np.max(Q1) - np.min(Q1)
-    range_Q2 = np.max(Q2) - np.min(Q2)
-    range_Q3 = np.max(Q3) - np.min(Q3)
+    freqs = [
+        calculate_avg_frequency(np.squeeze(Q1)),
+        calculate_avg_frequency(np.squeeze(Q2)),
+        calculate_avg_frequency(np.squeeze(Q3)),
+    ]
+    ampls = [
+        calculate_avg_diff(np.squeeze(Q1)),
+        calculate_avg_diff(np.squeeze(Q2)),
+        calculate_avg_diff(np.squeeze(Q3)),
+    ]
 
-    # Since we are using a GA that minimizes the objective, return the negative sum of ranges
-    score = -1.0 * (range_Q1 + range_Q2 + range_Q3)
-    if math.isnan(score):
-        return (10000000000,)
-    print(score)
-    return (score,)
+    if None in freqs or None in ampls:
+        return (10000,)
+
+    freq_score = np.sum(freqs)
+    ampl_score = np.sum([x for x in ampls])
+
+    # score = (1 - freq_score) + ampl_score
+    score = (1 - freq_score) * ampl_score
+
+    print(freq_score, ampl_score, score)
+    return (-score,)
 
 
 # Define the boundaries of the parameters
@@ -90,24 +128,50 @@ toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 # Register the genetic operators
 toolbox.register("evaluate", evaluate)
 toolbox.register("mate", tools.cxBlend, alpha=0.1)
-toolbox.register("mutate", tools.mutGaussian, mu=0, sigma=16, indpb=0.05)
-toolbox.register("select", tools.selTournament, tournsize=20)
+toolbox.register("mutate", tools.mutGaussian, mu=0, sigma=20, indpb=0.1)
+toolbox.register("select", tools.selTournament, tournsize=4)
+
 
 # Parameter for the GA
-population = toolbox.population(n=1000)
-NGEN = 30
+population = toolbox.population(n=100)
+NGEN = 60
 CXPB, MUTPB = 0.1, 0.25
 
+best_overall = None
+best_overall_score = 10000
+
 # Run the GA
-for gen in range(NGEN):
-    print(gen)
+for gen in tqdm(range(NGEN), desc="Evolving Generations"):
     offspring = algorithms.varAnd(population, toolbox, CXPB, MUTPB)
-    fits = toolbox.map(toolbox.evaluate, offspring)
+
+    # Adding tqdm to the inner loop
+    fits = [
+        toolbox.evaluate(ind) for ind in tqdm(offspring, desc=f"Evaluating Gen {gen}")
+    ]
+
     for fit, ind in zip(fits, offspring):
         ind.fitness.values = fit
     population = toolbox.select(offspring, k=len(population))
 
-top_individual = tools.selBest(population, k=1)[0]
-print("Best Individual: ", top_individual)
+    top_individual = tools.selBest(population, k=1)[0]
+    top_individual_score = evaluate(top_individual)[0]
 
-print("\n".join([str(x) for x in top_individual]))
+    print(top_individual_score)
+
+    with open("best_overall.txt", "a") as f:
+        f.write(f"best overall from gen {gen} with score {top_individual_score}")
+        f.write("\n")
+        f.write("\n".join([str(x) for x in top_individual]))
+        f.write("\n")
+        f.write("\n")
+
+    if best_overall is None or top_individual_score < best_overall_score:
+        best_overall = top_individual
+        best_overall_score = top_individual_score
+
+
+print()
+print()
+print("Top overall individual:", best_overall_score)
+print("\n".join([str(x) for x in best_overall]))
+print()

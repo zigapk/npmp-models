@@ -24,18 +24,18 @@ def calc_clear(T, period=24, amp=100):
 """
 
 # simulation parameters
-t_end = 400
-N = 1000
+t_end = 800
+N = int(2.5 * t_end)  # number of timesteps
 
 
 # # model parameters
-alpha1 = 34.73  # protein_production
-alpha2 = 49.36  # protein_production
-alpha3 = 32.73  # protein_production
-alpha4 = 49.54  # protein_production
-delta1 = 1.93  # protein_degradation
-delta2 = 0.69  # protein_degradation
-Kd = 10.44  # Kd
+alpha1 = 33.00188789843441
+alpha2 = 46.049242873562875
+alpha3 = 18.091178106515247
+alpha4 = 46.756580213281744
+delta1 = 1.2310854733181351
+delta2 = 0.36911726271103895
+Kd = 7.458684990153726
 n = 4.35  # hill
 deltaE = delta1
 KM = 1.0
@@ -65,17 +65,29 @@ def main():
     data_in = np.array([calc_input(x) for x in np.linspace(0, t_end, N)])
     data_clear = np.array([calc_clear(x) for x in np.linspace(0, t_end, N)])
 
-    plt.plot(T, Q1, label="q1")
-    plt.plot(T, Q2, label="q2")
-    plt.plot(T, Q3, label="q3")
-    # plt.plot(T, not_Q1, label='not q1')
-    # plt.plot(T, not_Q2, label='not q2')
-    plt.plot(T, data_in, "--", linewidth=2, label="input", color="green", alpha=0.5)
-    plt.plot(T, data_clear, "--", linewidth=2, label="clear", color="red", alpha=0.5)
+    fig, ax = plt.subplots(
+        figsize=(10, 5)
+    )  # Specify your desired width and height here
 
-    plt.plot(T, get_clock(T), "--", linewidth=2, label="CLK", color="black", alpha=0.25)
+    # Plotting
+    ax.plot(T, Q1, label="q1")
+    ax.plot(T, Q2, label="q2")
+    ax.plot(T, Q3, label="q3")
+    # ax.plot(T, not_Q1, label='not q1')
+    # ax.plot(T, not_Q2, label='not q2')
+    ax.plot(T, data_in, "--", linewidth=2, label="input", color="green", alpha=0.5)
+    ax.plot(T, data_clear, "--", linewidth=2, label="clear", color="red", alpha=0.5)
+    ax.plot(T, get_clock(T), "--", linewidth=2, label="CLK", color="black", alpha=0.25)
 
-    plt.legend()
+    # Legend
+    ax.legend()
+
+    # Display the plot
+    # plt.show()
+
+    # Save the figure
+    fig.savefig("plot.pdf", dpi=300)
+    # save as pdf in a huge size
     plt.show()
 
 
